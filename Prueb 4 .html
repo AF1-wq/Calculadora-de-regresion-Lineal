@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Regresión Lineal Pro</title>
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <style>
+        :root {
+            /* --- Colores Modo Claro (Default) --- */
+            --bg-principal: #f0f2f5;
+            --bg-secundario: #ffffff;
+            --texto-principal: #1c1e21;
+            --texto-secundario: #606770;
+            --borde: #dddfe2;
+            --sombra: 0 2px 4px rgba(0, 0, 0, .1), 0 8px 16px rgba(0, 0, 0, .1);
+            --azul-meta: #1877f2;
+            --azul-hover: #166fe5;
+            --bg-input: #ffffff;
+            --bg-input-focus: #e7f3ff;
+            --bg-resultado: #f0f2f5;
+            --bg-pasos: #f7f7f7;
+            --grid-color: rgba(0, 0, 0, 0.1);
+            --axis-color: #444;
+            --axis-principal: rgba(0, 0, 0, 0.6);
+        }
+
+        body.dark-mode {
+            /* --- Colores Modo Oscuro --- */
+            --bg-principal: #18191a;
+            --bg-secundario: #242526;
+            --texto-principal: #e4e6eb;
+            --texto-secundario: #b0b3b8;
+            --borde: #3a3b3c;
+            --sombra: 0 2px 4px rgba(0, 0, 0, .3), 0 8px 16px rgba(0, 0, 0, .3);
+            --azul-meta: #1877f2; /* El azul de Meta destaca bien en ambos modos */
+            --azul-hover: #166fe5;
+            --bg-input: #3a3b3c;
+            --bg-input-focus: #303e5c;
+            --bg-resultado: #18191a;
+            --bg-pasos: #3a3b3c;
+            --grid-color: rgba(255, 255, 255, 0.1);
+            --axis-color: #b0b3b8;
+            --axis-principal: rgba(255, 255, 255, 0.6);
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-principal);
+            color: var(--texto-principal);
+            margin: 0;
+            padding: 0;
+            overflow: hidden; /* Evitar scroll en el body */
+        }
+
+        /* --- 1. Estructura Principal (2 Columnas) --- */
+        .app-layout {
+            display: flex;
+            width: 100vw;
+            height: 100vh;
+        }
+
+        .input-panel {
+            flex: 0 0 400px; /* Ancho fijo para el panel de entrada */
+            background-color: var(--bg-secundario);
+            border-right: 1px solid var(--borde);
+            padding: 24px;
+            overflow-y: auto; /* Scroll si el contenido crece */
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .results-panel {
+            flex: 1; /* Ocupa el resto del espacio */
+            background-color: var(--bg-principal);
+            padding: 24px;
+            overflow-y: auto; /* Scroll para los resultados */
+            box-sizing: border-box;
+        }
+
+        /* --- 2. Componentes del Panel de Entrada --- */
+        h1 {
+            color: var(--texto-principal);
+            text-align: center;
+            font-size: 24px;
+            margin-top: 0;
+            margin-bottom: 20px;
+        }
+
+        .input-group {
+            margin-bottom: 16px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--texto-secundario);
+            font-size: 14px;
+        }
+
+        textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--borde);
+            border-radius: 6px;
+            font-family: monospace;
+            font-size: 14px;
+            box-sizing: border-box;
+            resize: vertical;
+            min-height: 80px;
+            background-color: var(--bg-input);
+            color: var(--texto-principal);
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: var(--azul-meta);
+            box-shadow: 0 0 0 2px var(--bg-input-focus);
+        }
+
+        button#calculate-btn {
+            width: 100%;
+            background-color: var(--azul-meta);
+            color: #ffffff;
+            border: none;
+            border-radius: 6px;
+            padding: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        button#calculate-btn:hover {
+            background-color: var(--azul-hover);
+        }
+
+        #error-message {
+            color: #d93025;
+            font-weight: 600;
+            margin-bottom: 16px;
+        }
+        
+        /* --- 3. Panel de Configuración --- */
+        .settings-panel {
+            margin-top: auto; /* Empuja esto al final del panel izquierdo */
+            padding-top: 20px;
+            border-top: 1px solid var(--borde);
+        }
+
+        .settings-panel h2 {
+            font-size: 18px;
+            margin-top: 0;
+            margin-bottom: 16px;
+        }
+
+        .setting-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        
+        .setting-item label {
+            margin-bottom: 0;
+            font-weight: normal;
+            font-size: 15px;
+            color: var(--texto-principal);
+        }
+
+        button#theme-toggle {
+            background-color: var(--borde);
+            color: var(--texto-principal);
+            border: none;
+            border-radius: 20px;
+            padding: 6px 12px;
+            font-size: 18px;
+            cursor: pointer;
+        }
+        
+        /* Toggle Switch (CSS puro) */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 44px;
+            height: 24px;
+        }
+        .switch input { display: none; }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: var(--borde);
+            transition: .4s;
+            border-radius: 24px;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        input:checked + .slider {
+            background-color: var(--azul-meta);
+        }
+        input:checked + .slider:before {
+            transform: translateX(20px);
+        }
+
+
+        /* --- 4. Componentes del Panel de Resultados --- */
+        .results-container {
+            display: none; /* Oculto hasta calcular */
+        }
+        
+        .results-panel h2 {
+            color: var(--texto-principal);
+            font-size: 20px;
+            margin-bottom: 16px;
+        }
+
+        #equationResult {
+            background-color: var(--bg-secundario);
+            border: 1px solid var(--borde);
+            padding: 16px;
+            border-radius: 6px;
+            font-size: 18px;
+            font-weight: 600;
+            text-align: center;
+            margin-bottom: 16px;
+            word-wrap: break-word;
+        }
+
+        #stepsResult pre {
+            background-color: var(--bg-pasos);
+            border: 1px solid var(--borde);
+            color: var(--texto-secundario);
+            padding: 12px;
+            border-radius: 6px;
+            overflow-x: auto;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+        
+        #regressionChartWrapper {
+            background-color: var(--bg-secundario);
+            border: 1px solid var(--borde);
+            border-radius: 6px;
+            padding: 10px;
+        }
+        
+        #formulaResult {
+            background-color: var(--bg-secundario);
+            padding: 1px 16px;
+            border: 1px solid var(--borde);
+            border-radius: 6px;
+        }
+        #formulaResult p {
+            overflow-x: auto;
+            padding-bottom: 5px;
+        }
+        
+        /* --- 5. Responsividad (Móvil) --- */
+        @media (max-width: 800px) {
+            .app-layout {
+                flex-direction: column; /* Apilar columnas */
+                height: auto;
+                overflow: auto; /* Permitir scroll en el body */
+            }
+            .input-panel {
+                flex: 1;
+                border-right: none;
+                border-bottom: 1px solid var(--borde);
+                height: auto;
+                overflow-y: visible;
+            }
+            .results-panel {
+                flex: 1;
+                height: auto;
+                overflow-y: visible;
+            }
+            .settings-panel {
+                margin-top: 20px; /* Quitar el auto-margin */
+            }
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="app-layout">
+        
+        <div class="input-panel">
+            
+            <div>
+                <h1>Regresión Lineal Pro</h1>
+                
+                <div id="error-message"></div>
+
+                <div class="input-group">
+                    <label for="x-values">Valores de X (separados por coma)</label>
+                    <textarea id="x-values" rows="4" placeholder="Ej: 1, 2, 3, 4, 5"></textarea>
+                </div>
+
+                <div class="input-group">
+                    <label for="y-values">Valores de Y (separados por coma)</label>
+                    <textarea id="y-values" rows="4" placeholder="Ej: 2, 3, 5, 4, 6"></textarea>
+                </div>
+
+                <button id="calculate-btn">Calcular</button>
+            </div>
+
+            <div class="settings-panel">
+                <h2>Configuración</h2>
+                
+                <div class="setting-item">
+                    <label for="theme-toggle-btn">Modo Oscuro</label>
+                    <button id="theme-toggle-btn">🌙</button>
+                </div>
+                
+                <div class="setting-item">
+                    <label for="toggle-formulas">Mostrar Fórmulas</label>
+                    <label class="switch">
+                        <input type="checkbox" id="toggle-formulas" checked>
+                        <span class="slider"></span>
+                    </label>
+                </div>
+
+                <div class="setting-item">
+                    <label for="toggle-steps">Mostrar Paso a Paso</label>
+                    <label class="switch">
+                        <input type="checkbox" id="toggle-steps" checked>
+                        <span class="slider"></span>
+                    </label>
+                </div>
+            </div>
+
+        </div>
+        
+        <div class="results-panel">
+
+            <div class="results-container" id="results-container">
+                
+                <h2>Ecuación de la Recta</h2>
+                <div id="equationResult"></div>
+
+                <h2>Gráfica de Regresión</h2>
+                <div id="regressionChartWrapper">
+                    <canvas id="regressionChart"></canvas>
+                </div>
+                
+                <div id="formula-section">
+                    <h2>Fórmulas y Paso a Paso</h2>
+                    <h3>Fórmulas Utilizadas</h3>
+                    <div id="formulaResult">
+                        <p>Pendiente ($m$): $$ m = \frac{n(\sum xy) - (\sum x)(\sum y)}{n(\sum x^2) - (\sum x)^2} $$</p>
+                        <p>Intercepto ($b$): $$ b = \frac{\sum y - m(\sum x)}{n} $$</p>
+                    </div>
+                </div>
+                
+                <div id="steps-section">
+                    <h3>Cálculo Detallado</h3>
+                    <div id="stepsResult"></div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let myChart; // Variable global para la gráfica
+        let lastData = null; // Variable para guardar los últimos datos calculados
+
+        // --- A. Lógica de Cálculo ---
+        document.getElementById('calculate-btn').addEventListener('click', () => {
+            
+            document.getElementById('results-container').style.display = 'none';
+            document.getElementById('error-message').innerText = '';
+
+            // 1. Parsear datos
+            const xStr = document.getElementById('x-values').value;
+            const yStr = document.getElementById('y-values').value;
+            const x = xStr.split(',').map(s => parseFloat(s.trim())).filter(n => !isNaN(n));
+            const y = yStr.split(',').map(s => parseFloat(s.trim())).filter(n => !isNaN(n));
+
+            // 2. Validar
+            if (x.length !== y.length) {
+                document.getElementById('error-message').innerText = 'Error: Los conjuntos X e Y deben tener el mismo número de elementos.';
+                return;
+            }
+            if (x.length < 2) {
+                document.getElementById('error-message').innerText = 'Error: Se necesitan al menos 2 puntos de datos.';
+                return;
+            }
+
+            // 3. Calcular
+            const result = calculateLinearRegression(x, y);
+            if (!result) return; 
+
+            // Guardar datos para redibujar la gráfica si cambia el tema
+            lastData = { x, y, m: result.m, b: result.b };
+
+            // 4. Mostrar
+            displayResults(result);
+            drawChart(x, y, result.m, result.b);
+            document.getElementById('results-container').style.display = 'block';
+
+            if (window.MathJax) {
+                MathJax.typesetPromise();
+            }
+        });
+
+        function calculateLinearRegression(x, y) {
+            const n = x.length;
+            let sumX = 0, sumY = 0, sumXY = 0, sumX2 = 0;
+            for (let i = 0; i < n; i++) {
+                sumX += x[i]; sumY += y[i]; sumXY += x[i] * y[i]; sumX2 += x[i] * x[i];
+            }
+            const numeratorM = (n * sumXY) - (sumX * sumY);
+            const denominatorM = (n * sumX2) - (sumX * sumX);
+            
+            if (denominatorM === 0) {
+                document.getElementById('error-message').innerText = 'Error: No se puede calcular la regresión. Todos los valores de X son idénticos.';
+                return null;
+            }
+            const m = numeratorM / denominatorM;
+            const b = (sumY - m * sumX) / n;
+
+            let steps = `
+<pre>
+1. DATOS INICIALES
+   n = ${n}
+   X: [${x.map(val => val.toFixed(2)).join(', ')}]
+   Y: [${y.map(val => val.toFixed(2)).join(', ')}]
+2. SUMATORIAS
+   Σx  = ${sumX.toFixed(4)}
+   Σy  = ${sumY.toFixed(4)}
+   Σxy = ${sumXY.toFixed(4)}
+   Σx² = ${sumX2.toFixed(4)}
+3. CÁLCULO PENDIENTE (m)
+   m = (n*Σxy - Σx*Σy) / (n*Σx² - (Σx)²)
+   m = (${n}*${sumXY.toFixed(4)} - ${sumX.toFixed(4)}*${sumY.toFixed(4)}) / (${n}*${sumX2.toFixed(4)} - (${sumX.toFixed(4)})²)
+   m = ${m.toFixed(4)} / ${denominatorM.toFixed(4)}
+   m = ${m.toFixed(4)}
+4. CÁLCULO INTERCEPTO (b)
+   b = (Σy - m*Σx) / n
+   b = (${sumY.toFixed(4)} - ${m.toFixed(4)}*${sumX.toFixed(4)}) / ${n}
+   b = (${(sumY - m * sumX).toFixed(4)}) / ${n}
+   b = ${b.toFixed(4)}
+</pre>`;
+            return { m, b, steps };
+        }
+
+        function displayResults(result) {
+            const m = result.m, b = result.b;
+            const bSign = b >= 0 ? '+' : '-';
+            const bValue = Math.abs(b).toFixed(4);
+            const mValue = m.toFixed(4);
+            
+            document.getElementById('equationResult').innerText = `y = ${mValue}x ${bSign} ${bValue}`;
+            document.getElementById('stepsResult').innerHTML = result.steps;
+        }
+
+        function drawChart(x, y, m, b) {
+            const ctx = document.getElementById('regressionChart').getContext('2d');
+            if (myChart) { myChart.destroy(); }
+
+            const scatterData = x.map((val, index) => ({ x: val, y: y[index] }));
+            const minX = Math.min(...x), maxX = Math.max(...x);
+            const regressionLineData = [
+                { x: minX, y: m * minX + b },
+                { x: maxX, y: m * maxX + b }
+            ];
+
+            // --- Lógica de Color (Modo Claro/Oscuro) ---
+            const isDarkMode = document.body.classList.contains('dark-mode');
+            const gridColor = isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
+            const axisColor = isDarkMode ? '#b0b3b8' : '#444';
+            const axisPrincipal = isDarkMode ? 'rgba(255, 255, 255, 0.6)' : 'rgba(0, 0, 0, 0.6)';
+
+            myChart = new Chart(ctx, {
+                type: 'scatter',
+                data: {
+                    datasets: [
+                        { label: 'Datos (x, y)', data: scatterData, backgroundColor: 'rgba(24, 119, 242, 0.7)', pointRadius: 5 },
+                        { label: 'Regresión', data: regressionLineData, type: 'line', borderColor: 'rgba(217, 48, 37, 0.9)', borderWidth: 2, fill: false, pointRadius: 0 }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    aspectRatio: 1.8, // Ajustar a un aspect ratio cómodo
+                    scales: {
+                        x: {
+                            type: 'linear', position: 'bottom',
+                            title: { display: true, text: 'Eje X', color: axisColor },
+                            grid: {
+                                color: (c) => (c.tick && c.tick.value === 0) ? axisPrincipal : gridColor,
+                                lineWidth: (c) => (c.tick && c.tick.value === 0) ? 2 : 1
+                            },
+                            ticks: { color: axisColor }
+                        },
+                        y: {
+                            title: { display: true, text: 'Eje Y', color: axisColor },
+                            grid: {
+                                color: (c) => (c.tick && c.tick.value === 0) ? axisPrincipal : gridColor,
+                                lineWidth: (c) => (c.tick && c.tick.value === 0) ? 2 : 1
+                            },
+                            ticks: { color: axisColor }
+                        }
+                    },
+                    plugins: {
+                        legend: { labels: { color: axisColor } }
+                    }
+                }
+            });
+        }
+
+        // --- B. Lógica de Configuración (Toggles) ---
+        
+        // 1. Toggle de Tema (Modo Oscuro/Claro)
+        const themeBtn = document.getElementById('theme-toggle-btn');
+        themeBtn.addEventListener('click', () => {
+            document.body.classList.toggle('dark-mode');
+            const isDark = document.body.classList.contains('dark-mode');
+            themeBtn.innerText = isDark ? '☀️' : '🌙';
+            
+            // Si ya hay una gráfica, redibujarla con los nuevos colores
+            if (lastData) {
+                drawChart(lastData.x, lastData.y, lastData.m, lastData.b);
+            }
+            // Actualizar el color de las fórmulas MathJax
+            if (window.MathJax) {
+                 // Un truco para que MathJax sepa que debe cambiar el color del texto
+                MathJax.startup.output.chtml.options.adaptiveColors = !isDark;
+                MathJax.typesetPromise();
+            }
+        });
+
+        // 2. Toggle de Visibilidad de Fórmulas
+        document.getElementById('toggle-formulas').addEventListener('change', (e) => {
+            document.getElementById('formula-section').style.display = e.target.checked ? 'block' : 'none';
+        });
+
+        // 3. Toggle de Visibilidad de Paso a Paso
+        document.getElementById('toggle-steps').addEventListener('change', (e) => {
+            document.getElementById('steps-section').style.display = e.target.checked ? 'block' : 'none';
+        });
+
+    </script>
+</body>
+</html>
