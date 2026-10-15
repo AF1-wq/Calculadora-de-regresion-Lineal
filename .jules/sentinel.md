@@ -1,0 +1,4 @@
+## 2026-10-15 - [CRITICAL] Supply Chain Attack via Compromised CDN (polyfill.io)
+**Vulnerability:** The application was loading a script from `polyfill.io` (`https://polyfill.io/v3/polyfill.min.js?features=es6`), which is a known compromised domain serving malicious code (supply chain attack).
+**Learning:** External dependencies, especially scripts loaded via CDNs, can become malicious over time if the domain is sold or compromised. Relying on an unmaintained or compromised service like `polyfill.io` exposes users to XSS and complete site takeover.
+**Prevention:** Use trusted, maintained CDNs (like Cloudflare, jsDelivr, unpkg). Where possible, use Subresource Integrity (SRI) hashes to ensure the loaded script has not been tampered with. Remove dependencies on services that have been officially retired or flagged as malicious.
