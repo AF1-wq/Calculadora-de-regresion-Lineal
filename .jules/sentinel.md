@@ -1,0 +1,4 @@
+## 2026-10-17 - [Supply Chain Attack] polyfill.io Compromise
+**Vulnerability:** The `polyfill.io` domain was acquired by a malicious actor and is serving obfuscated malware instead of the expected polyfills, causing a critical supply chain vulnerability.
+**Learning:** External CDNs can become compromised. Relying on an unversioned or untrusted CDN without Subresource Integrity (SRI) leaves the application open to arbitrary code execution if the CDN serves malicious scripts.
+**Prevention:** Avoid relying on untrusted/compromised CDNs like polyfill.io. Use reputable CDNs (like Cloudflare or Fastly alternatives for polyfills), host the scripts locally if feasible, and always implement Subresource Integrity (SRI) hashes on external script tags.
