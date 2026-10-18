@@ -1,0 +1,4 @@
+## 2024-10-18 - [Supply Chain] Removed malicious polyfill.io CDN link
+**Vulnerability:** The application was loading a script from `polyfill.io`. This domain was sold and the new owners have been serving malicious code via a supply chain attack.
+**Learning:** Third-party CDNs for common polyfills or libraries can become compromised. In modern environments, many polyfills (like basic ES6 features) are no longer necessary, and if they are, they should be bundled locally or served from a highly trusted, verified CDN (like cdnjs or unpkg) with Subresource Integrity (SRI) hashes.
+**Prevention:** Avoid relying on unverified third-party CDNs. If a CDN must be used, always include Subresource Integrity (SRI) hashes in script tags (`integrity="..."`) so the browser rejects compromised files. Keep up-to-date with security news regarding major web infrastructure components.
