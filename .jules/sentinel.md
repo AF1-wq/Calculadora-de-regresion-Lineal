@@ -1,0 +1,4 @@
+## 2026-10-23 - Malicious CDN Domain
+**Vulnerability:** Use of `polyfill.io` CDN which was compromised and used to serve malicious scripts (Supply Chain Attack).
+**Learning:** External script sources can be sold or compromised, turning previously safe third-party dependencies into vectors for arbitrary code execution in the client's browser.
+**Prevention:** Avoid unverified CDNs. When possible, self-host dependencies or use trusted, highly-reputable CDN providers (like Cloudflare). Consider using Subresource Integrity (SRI) attributes where feasible, though less applicable for dynamically generated polyfills.
