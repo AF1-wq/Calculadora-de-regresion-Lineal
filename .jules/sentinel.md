@@ -1,0 +1,4 @@
+## 2024-02-23 - [Critical] polyfill.io supply chain vulnerability
+**Vulnerability:** The `polyfill.io` service was acquired by an untrusted entity, leading to instances where malicious code was served instead of legitimate polyfills, constituting a severe supply chain attack.
+**Learning:** Third-party CDNs and externally hosted scripts, especially those serving executable code like polyfills, pose significant supply chain risks. Trust can be violated if domains change ownership.
+**Prevention:** Avoid using `polyfill.io`. Use secure, reputable alternatives like `cdnjs.cloudflare.com/polyfill` or self-host necessary polyfills. Ensure all third-party scripts utilize Subresource Integrity (SRI) where applicable, though SRI is difficult for dynamically generated scripts like polyfills.
